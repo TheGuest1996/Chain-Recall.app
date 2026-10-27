@@ -1,0 +1,371 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Chain Recall</title><style>
+:root{--bg:#f4f3eb;--fg:#000;--ac:#005738;--ok:#157347;--bad:#c0392b;--on:#f4f3eb;--sf:color-mix(in srgb,var(--fg) 5%,var(--bg));--bd:color-mix(in srgb,var(--fg) 18%,var(--bg));--mu:color-mix(in srgb,var(--fg) 58%,var(--bg));box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+:root[data-theme=light],:root[data-theme=sys]{--bg:#edecea;--fg:#131313;--ac:#8fb0ff;--on:#131313}
+:root[data-theme=dark]{--bg:#121315;--fg:#ececec;--ac:#8fb0ff;--on:#121315;--ok:#4cc38a;--bad:#f0807a}
+@media(prefers-color-scheme:dark){:root[data-theme=sys]{--bg:#121315;--fg:#ececec;--ac:#8fb0ff;--on:#121315;--ok:#4cc38a;--bad:#f0807a}}
+:root[data-theme=mono]{--bg:#f2f2f2;--fg:#111;--ac:#111;--on:#f2f2f2;--ok:#111;--bad:#555}
+:root[data-theme=imono]{--bg:#111;--fg:#f2f2f2;--ac:#f2f2f2;--on:#111;--ok:#f2f2f2;--bad:#aaa}
+:root[data-theme=light] :focus-visible,:root[data-theme=sys] :focus-visible{outline-color:var(--fg)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:840px;margin:0 auto;padding:20px 16px 56px}#game,#end{max-width:680px;margin:0 auto}
+h1{font-size:1.7rem;margin:.2em 0;letter-spacing:-.02em}h2{font-size:1rem;margin:26px 0 8px}
+.mu{color:var(--mu);font-size:.9rem}[hidden]{display:none!important}
+textarea,input,select,button{font:inherit;color:inherit}
+textarea,input,select{width:100%;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
+input[type=color]{width:56px;height:38px;padding:2px}input[type=checkbox]{width:auto}
+textarea{resize:vertical}
+.mu input[type=number],.mu input[data-num]{color:var(--fg);font-size:1rem}.ne{margin-top:4px;font-size:.9rem}
+button{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:9px 14px;cursor:pointer}
+button:hover{border-color:var(--mu)}button.on,button.pri{background:var(--ac);border-color:var(--ac);color:var(--on)}
+button.pri{font-weight:600;padding:12px 22px}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.seg{display:flex;gap:6px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:520px){.grid.d{grid-template-columns:1fr}}
+.dc{text-align:left;padding:12px;width:100%}.dc b,.dc span{display:block}.dc span{font-size:.85rem;opacity:.85}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.grp{border:1px solid var(--bd);border-radius:12px;margin-top:8px}.grp>summary{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 14px;cursor:pointer;list-style:none;font-weight:600}
+.grp>summary::-webkit-details-marker{display:none}.grp>summary>span:first-child::before{content:'\25B8';display:inline-block;width:1.1em;transition:transform .15s}
+.grp[open]>summary>span:first-child::before{transform:rotate(90deg)}.grp>summary .mu{font-weight:400;text-align:right}.gb{padding:2px 14px 14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+#lv{color:var(--bad);letter-spacing:.15em;font-size:1.2rem}.sp{opacity:.3}#tm{font-variant-numeric:tabular-nums}
+#tm.low{color:var(--bad)}#tm.fl{animation:tf 1s linear forwards}@keyframes tf{0%,40%{opacity:1}100%{opacity:.3}}
+.bar{height:8px;background:var(--sf);border:1px solid var(--bd);border-radius:9px;overflow:hidden;margin:8px 0 18px}
+.bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .4s}
+#pl{position:relative}
+.word{font-size:clamp(2.4rem,11vw,4.6rem);font-weight:700;text-align:center;margin:16px 0 4px;overflow-wrap:anywhere;letter-spacing:-.02em}
+#ans{font-size:1.2rem;padding:14px}#fb{min-height:70px;margin-top:12px}
+.bad{color:var(--bad)}#fb .bad{animation:sh .3s}@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+u.bad{text-decoration:underline wavy;font-weight:700}
+.att{margin-top:6px;padding:8px 10px;border:1px dashed var(--bd);border-radius:8px;overflow-wrap:anywhere}
+#fb>span{font-weight:600;color:var(--ok);vertical-align:middle}
+.tick{vertical-align:middle;margin-right:8px}.tick circle,.tick path{stroke:var(--ok);fill:none;stroke-width:3}
+.tick path{stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:dr .45s .1s ease forwards}
+@keyframes dr{to{stroke-dashoffset:0}}
+#pz{position:absolute;inset:-6px;background:var(--bg);display:grid;place-content:center;gap:10px;text-align:center;z-index:2}
+.cf{position:fixed;top:-14px;width:8px;height:14px;border-radius:2px;z-index:9;animation:fall 2.6s ease-in forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(var(--r));opacity:.2}}
+.st{color:var(--fg);font-size:1.2rem;line-height:1.3}.st b{font-weight:700}.st .mu{font-size:.9rem}.good{color:var(--ok)}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);max-width:calc(100vw - 32px);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:10px;z-index:20;font-size:.95rem;text-align:center;pointer-events:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.tick path{stroke-dashoffset:0}}
+</style></head><body><main>
+<section id="setup">
+<h1>Chain Recall</h1>
+<p id="sw" class="bad" style="font-size:.9rem" hidden>Saving is blocked in this browser, so lists, scores and settings will be lost when you leave.</p>
+<p class="mu">Paste a list with one item per line. An item can be a single word or a phrase. Each stage adds one: type everything so far, in order. Capitals and punctuation don’t matter.</p>
+<textarea id="ta" rows="7" aria-label="Word list" placeholder="Apple&#10;River&#10;Ice cream&#10;Window&#10;Lantern"></textarea>
+<div id="info" class="mu" aria-live="polite"></div>
+<h2>Saved lists</h2>
+<p class="mu" style="margin:0 0 8px">Saved lists keep their scores. A run only counts when the whole list is played.</p>
+<div class="row"><input id="nm" placeholder="List name" style="flex:1;width:auto" aria-label="List name"><button id="sv">Save list</button></div>
+<div id="sl"></div>
+<h2>Range and order</h2>
+<div class="grid"><label class="mu">Start at word<input id="st" type="text" inputmode="numeric" maxlength="6" data-num autocomplete="off"></label><label class="mu">End at word<input id="en" type="text" inputmode="numeric" maxlength="6" data-num autocomplete="off"></label></div>
+<div class="row" style="margin-top:10px;justify-content:space-between"><div class="seg" data-k="order"></div><button id="rr">Reset range and order</button></div>
+<h2>Difficulty</h2><p class="mu" style="margin:0 0 8px">A wrong answer, a stage running out of time, or showing the answer all count as a mistake.</p><div class="grid d" id="dif"></div>
+<div id="cu" class="card" hidden style="margin-top:10px"><div class="mu">Stage replays / full restarts allowed</div><div class="seg" data-k="cunl"></div>
+<label id="crw" class="mu" style="display:block;margin-top:8px">Stage replays (0 for none). Hearts at 10 or fewer, a count above that.<input id="crp" type="text" inputmode="numeric" maxlength="3" data-num autocomplete="off"></label>
+<label id="clw" class="mu" style="display:block;margin-top:12px">Full restarts, spent once replays run out (0 for none). Symbols at 10 or fewer, a count above that.<input id="clf" type="text" inputmode="numeric" maxlength="3" data-num autocomplete="off"></label>
+<div id="ckw"><div class="mu" style="margin-top:12px">When you get it wrong</div><div class="seg" data-k="ckeep"></div></div></div>
+<p style="margin:18px 0 0"><button class="pri" id="play">Start game</button></p>
+<h2>More settings</h2>
+<details class="grp" id="g-timer"><summary><span>Timer</span><span class="mu" id="sm-timer"></span></summary><div class="gb">
+<div class="seg" data-k="timer"></div><select id="tv" aria-label="Duration" style="margin-top:8px"></select><label id="tww" class="mu" style="display:block;margin-top:8px" hidden>Seconds per word. Stage 1 gets this long, stage 2 gets twice as long, and so on.<input id="tw" type="text" inputmode="numeric" maxlength="3" data-num autocomplete="off"></label>
+<div id="trc" class="card" hidden style="margin-top:10px"><div class="mu">When a mistake makes you replay the stage. Running out of time always resets the timer.</div><div class="seg" data-k="trs"></div></div>
+<div id="swc" class="card" hidden style="margin-top:10px"><div class="mu">Show a stopwatch while you play</div><div class="seg" data-k="swon"></div>
+<div id="swo"><div class="mu" style="margin-top:12px">Stopwatch format</div><div class="seg" data-k="swf"></div></div></div>
+</div></details>
+<details class="grp" id="g-auto"><summary><span>Auto-advance</span><span class="mu" id="sm-auto"></span></summary><div class="gb">
+<p class="mu" style="margin:0 0 8px">Move to the next word by itself after a correct answer.</p><div class="seg" data-k="auto"></div><select id="dl" aria-label="Delay before the next word" style="margin-top:8px"></select>
+</div></details>
+<details class="grp" id="g-cheat"><summary><span>Anti-cheat</span><span class="mu" id="sm-cheat"></span></summary><div class="gb">
+<p class="mu" style="margin:0 0 8px">Blocks copy, cut, paste, undo and redo, and the right-click menu, but only while you are playing. This screen works as normal, so you can still paste word lists. The setting is saved with each time.</p><div class="seg" data-k="cheat"></div>
+</div></details>
+<details class="grp" id="g-snd"><summary><span>Sound</span><span class="mu" id="sm-snd"></span></summary><div class="gb">
+<label class="mu" style="display:block"><input type="checkbox" id="snd"> Sound effects</label>
+</div></details>
+<details class="grp" id="g-theme"><summary><span>Colours</span><span class="mu" id="sm-theme"></span></summary><div class="gb">
+<div class="seg" data-k="theme"></div>
+<div id="cp" hidden style="margin-top:8px"><div class="row"><label class="mu">Background <input type="color" id="c0"></label><label class="mu">Text <input type="color" id="c1"></label><label class="mu">Accent <input type="color" id="c2"></label><button id="cd">Reset to default</button></div>
+<div class="row" style="margin-top:10px"><input id="tc" placeholder="244,243,235 0,0,0 0,87,56" aria-label="Colour code" autocomplete="off" spellcheck="false" style="flex:1;width:auto;min-width:190px"><button id="tcs">Save</button><button id="tcl">Load</button></div>
+<div id="tcm" class="mu" aria-live="polite" style="margin-top:6px">Colour code: background, text, then accent, each as red,green,blue.</div></div>
+</div></details>
+<h2>All-time stats</h2><div id="ls" class="grid"></div>
+<div class="row" style="margin-top:14px"><button id="rt">Reset stats and times</button><button id="rs2">Reset stats, keep times</button><button id="scd">Default settings</button></div>
+<div id="dsm" class="mu" aria-live="polite" style="margin-top:6px"></div>
+<p class="mu" style="margin:6px 0 0">Times are the best scores saved with your lists. Default settings means medium difficulty, 5 seconds per word and auto-advance after 0.5 s. Your word list and colours stay as they are.</p>
+<h2>Save or load settings</h2><p class="mu" style="margin:0 0 8px">A settings code covers difficulty, order, timer, stopwatch, auto-advance, anti-cheat and sound. It leaves out your word list, range and colours.</p>
+<div class="row"><input id="sc" placeholder="XXXXX-XXXXX-XXXXX" aria-label="Settings code" autocomplete="off" autocapitalize="characters" spellcheck="false" style="flex:1;width:auto;min-width:190px"><button id="scs">Save</button><button id="scl">Load</button></div>
+<div id="scm" class="mu" aria-live="polite" style="margin-top:6px"></div>
+</section>
+<section id="game" hidden>
+<div class="top"><button id="pause">Pause</button><span id="lv" aria-label="Replays and restarts left"></span><span id="tm" class="mu"></span></div>
+<div style="margin-top:14px"><b id="stg"></b></div>
+<div class="bar"><i id="fill"></i></div>
+<div id="pl">
+<div id="word" class="word"></div>
+<p id="pr" class="mu" style="text-align:center"></p>
+<input id="ans" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Your answer" placeholder="Type the words here">
+<div id="fb" aria-live="polite"></div>
+<div class="row" style="margin-top:10px"><button id="go" class="pri">Submit</button><button id="show">Show answer</button></div>
+<div id="pz" hidden><h1>Paused</h1><button class="pri" id="res">Resume</button><button id="prs">Restart</button><button id="pmn">Setup</button></div>
+</div></section>
+<section id="end" hidden>
+<h1 id="et" style="text-align:center;margin-top:30px"></h1><div id="es" class="grid"></div>
+<div class="row" style="margin-top:18px;justify-content:center"><button class="pri" id="pa">Play again</button><button id="bs">Back to setup</button></div>
+</section></main>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+const $=s=>document.querySelector(s),R=document.documentElement,esc=s=>s.replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
+const S={g(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}},s(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{$('#sw').hidden=false}}};
+const DC=['#f4f3eb','#000000','#005738'],TH=['orig','light','dark','sys','mono','imono','custom'];
+const DEF0={order:'orig',diff:'easy',crep:2,clif:3,cunl:'0',ckeep:'1',timer:'off',swon:'0',swf:'s',secs:30,wsec:5,trs:'1',sess:300,snd:true,auto:'1',dly:500,cheat:'off'};
+let cfg=Object.assign({},DEF0,{theme:'orig',c:DC.slice(),txt:'',st:'',en:'',op:{}},(o=>{o=o&&typeof o=='object'?o:{};if(!o.v&&(!o.theme||o.theme=='light'))o.theme='orig';o.v=2;return o})(S.g('cr-cfg',{})));
+if(!TH.includes(cfg.theme))cfg.theme='orig';if(!cfg.op||typeof cfg.op!='object')cfg.op={};if(!Array.isArray(cfg.c)||cfg.c.length!=3||cfg.c.some(x=>!/^#[0-9a-f]{6}$/i.test(x)))cfg.c=DC.slice();
+const nul=o=>Object.assign(Object.create(null),o),T0=()=>({plays:0,wins:0,ok:0,bad:0,best:0,lost:0,time:0,d:{}});
+let lists=nul(S.g('cr-lists',{})),scores=nul(S.g('cr-sc',{})),shown=new Set,shownC=new Set,tot=Object.assign(T0(),S.g('cr-tot',{})),G=null,AC;
+const save=()=>S.s('cr-cfg',cfg),tk=s=>{const o=[];let c=0;[...s].forEach((ch,i)=>{if(/[.'’`]/.test(ch))return;if(/[\p{L}\p{M}\p{N}]/u.test(ch)){c||o.push(c=[]);c.push([ch.toLowerCase(),i])}else c=0});return o},norm=s=>tk(s).map(t=>t.map(u=>u[0]).join('')),parse=t=>t.split(/\r?\n/).map(x=>x.trim().replace(/\s+/g,' ')).filter(x=>norm(x).length);
+const fmt=s=>{s=Math.max(0,Math.ceil(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const dur=ms=>{const s=Math.round(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?h+'h '+m+'m':m?m+'m '+s%60+'s':s+'s'};
+const hms=(t,m)=>{t=Math.max(0,Math.floor(t));const p=(n,l=2)=>String(n).padStart(l,'0');return p(Math.floor(t/36e5))+':'+p(Math.floor(t/6e4)%60)+':'+p(Math.floor(t/1e3)%60)+(m?'.'+p(t%1e3,3):'')};
+const sg=t=>parse(t).map(x=>norm(x).join(' ')).join('|');
+const pp=(f,e,T,l)=>!T?'':T>10&&l>10?f+' '+l:f.repeat(l)+(T>10?(l?'':e):e.repeat(T-l));
+const cl=q=>q.l<0?'unlimited':[q.l?q.l+' replay'+(q.l>1?'s':''):'no replays',q.r?q.r+' restart'+(q.r>1?'s':''):'no restarts'].join(', ')+(q.l?q.k?', keeps what you typed':', clears the box':'');
+const cr=o=>Array.isArray(o)?o.filter(r=>r&&typeof r=='object'):o&&typeof o=='object'&&(o.t||o.w)?[o]:[];
+const hasSc=k=>{const d=scores[k]||{};return Object.keys(d).some(v=>cr(d[v]).length)};
+const msf=()=>cfg.timer=='off'&&cfg.swon=='1'&&cfg.swf=='ms';
+const hard=(r,n)=>{const q=r.q||{l:-1},o=r.o||{},L=q.l<0?1/0:q.l+q.r,tp=o.tm&&o.tm!='off'?1/(1+(o.tm=='word'?o.tv:o.tm=='stage'?2*o.tv/(n+1):2*o.tv/(n*(n+1)))/5):0;return 1/(1+L)+tp+(q.l&&!q.k?0.05:0)+((o.tm=='word'||o.tm=='stage')&&q.l&&o.tr=='0'?0.05:0)+(o.r=='shuf'?0.05:0)};
+const rk=n=>(a,b)=>(!!b.r.t-!!a.r.t)||(a.r.t?(hard(b.r,n)-hard(a.r,n))||(a.r.t-b.r.t):(b.r.w-a.r.w)||(hard(b.r,n)-hard(a.r,n))||((b.r.dt||0)-(a.r.dt||0)));
+const rq=(r,v)=>r.q||P[v]||{l:-1,r:-1,k:1},
+ks=(r,v)=>{const q=rq(r,v),o=r.o||{},tm=o.tm||'off';return JSON.stringify([q.l,q.r,q.l?q.k:0,o.r||'orig',tm,tm=='off'?0:o.tv,(tm=='word'||tm=='stage')&&q.l?o.tr:'',o.a=='1'?o.d:0,o.ch||'off'])},
+beats=(a,b)=>a.t?!b.t||a.t<b.t:!b.t&&a.w>b.w;
+function migSc(){let ch=0;Object.keys(scores).forEach(k=>{const d=scores[k];if(!d||typeof d!='object'){delete scores[k];ch=1;return}DIF.forEach(([v])=>{const raw=d[v];if(raw===undefined)return;const a=cr(raw);if(!Array.isArray(raw)||a.length!=raw.length)ch=1;a.forEach(r=>{if(!r.q&&v!='cus'){r.q=Object.assign({},P[v]);ch=1}});d[v]=a})});if(ch)S.s('cr-sc',scores)}
+function endRun(w){if(!G||G.rec)return;G.rec=1;tot.best=Math.max(tot.best,G.max);S.s('cr-tot',tot);
+if(!G.sl||!G.full||!lists[G.sl]||!(w||G.max>0))return;
+const v=G.dk,o=scores[G.sl]||(scores[G.sl]={}),a=o[v]=cr(o[v]),run={t:w?Math.max(1,Math.round(G.t)):0,w:w?G.a.length:G.max,o:G.o,dt:Date.now(),q:G.q},s=ks(run,v),j=a.findIndex(r=>ks(r,v)==s);
+if(j<0)a.push(run);else if(beats(run,a[j]))a[j]=run;
+S.s('cr-sc',scores)}
+const CHL={off:'Nothing blocked',cp:'Copy/paste blocked',rc:'Right-click blocked',both:'Copy/paste and right-click blocked'},ck=(k,v)=>k+'|'+v;
+const scoreCard=k=>{const d=scores[k]||{},m=msf(),n=parse(lists[k]).length,
+row=(t,r,x,v,i=0,ex='')=>{const o=r.o,rp=rq(r,v),c=t.indexOf(':'),hd=`<b>${c<0?t:t.slice(0,c+1)}</b>`+(c<0?'':` <span class="mu">${t.slice(c+1).trim()}</span>`),tm=`<b style="font-size:1.3rem">${hms(r.t||0,m)}</b>`,mt=x?';margin-top:12px':'';return(ex?`<div class="row" style="justify-content:space-between;flex-wrap:nowrap${mt}"><div class="st">${hd}</div>${ex}</div>`:`<div class="st"${x?' style="margin-top:12px"':''}>${hd}</div>`)+(r.t||r.w?`<div class="row" style="justify-content:space-between;flex-wrap:nowrap">${tm}<button data-a="ds" data-n="${esc(k)}" data-v="${v}" data-i="${i}" aria-label="Delete this score" title="Delete this score" style="color:var(--bad);padding:6px 9px">${BIN}</button></div>`:tm)+`<div class="mu">${r.t?'Words':'Most words'}: ${r.w||0} of ${n}</div>`+(r.dt?`<div class="mu">${r.t?'Completed':'Played'}: ${new Date(r.dt).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}</div>`:'')+(o&&o.tm?`<div class="mu">Timer: ${o.tm=='off'?'Untimed':o.tm=='word'?'Scaling per word, '+o.tv+' s per word':o.tm=='stage'?'Per stage, '+o.tv+' s':'Whole session, '+fmt(o.tv)}${o.tm!='off'&&o.tm!='sess'&&o.tr=='0'&&rp.l?', time kept on replays':''}</div>`:'')+(o?`<div class="mu">Auto-advance: ${o.a=='1'?'Enabled, delay '+o.d/1000+' s'+(o.d==100?' (instant)':''):'Disabled'}</div><div class="mu">Range and order: words ${o.s} to ${o.e}, ${o.r=='shuf'?'shuffled':'original order'}</div><div class="mu">Anti-cheat: ${CHL[o.ch]||CHL.off}</div>`:'')};let x=0;
+return'<div class="card" style="margin-top:6px">'+DIF.map(([v,t])=>{const c=cr(d[v]).map((r,i)=>({r,i})).sort(rk(n));if(!c.length)return row(t,{},x++,v);const open=shownC.has(ck(k,v))&&c.length>1;return(open?c:c.slice(0,1)).map(({r,i},z)=>row(v=='cus'?'Custom: '+(r.q?cl(r.q):'your own rules'):t,r,x++,v,i,z||c.length<2?'':`<button data-a="ca" data-n="${esc(k)}" data-v="${v}" class="${open?'on':''}" aria-expanded="${open}" style="padding:5px 10px;font-size:.9rem;flex:none">See all (${c.length})</button>`)).join('')}).join('')+`<div style="margin-top:12px"><button data-a="rs" data-n="${esc(k)}">Reset all scores for this list</button></div></div>`};
+const BIN='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/></svg>';
+const TICK='<svg class="tick" viewBox="0 0 52 52" width="34" height="34"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-17" pathLength="1"/></svg>';
+const SEG={order:[['orig','Original order'],['shuf','Shuffle']],timer:[['off','Untimed'],['word','Scaling per word'],['stage','Per stage'],['sess','Whole session']],theme:[['orig','Original'],['light','Light'],['dark','Dark'],['sys','System'],['mono','Monochrome'],['imono','Inverted monochrome'],['custom','Custom']],cheat:[['off','Nothing blocked'],['cp','No copy/paste'],['rc','No right-click'],['both','Both']],auto:[['1','Enabled'],['0','Disabled']],cunl:[['0','A set number'],['1','Unlimited']],ckeep:[['1','Keep what I typed'],['0','Clear the box']],trs:[['1','Reset the timer'],['0','Keep the time left']],swon:[['1','Yes'],['0','No']],swf:[['s','Hours, minutes, seconds'],['ms','Hours, minutes, seconds, milliseconds']]};
+const P={vez:{l:-1,r:-1,k:1},easy:{l:3,r:3,k:1},med:{l:2,r:2,k:0},hard:{l:1,r:1,k:0},exp:{l:0,r:1,k:0}},prm=(d=cfg.diff)=>d=='cus'?{l:cfg.cunl=='1'?-1:+cfg.crep,r:cfg.cunl=='1'?-1:+cfg.clif,k:+(cfg.ckeep=='1')}:P[d];
+const rule=({l,r,k})=>{const n=x=>x==1?'once':'up to '+x+' times',kp=l?(k?' What you typed stays in the box.':' The box is cleared.'):'';
+if(l<0)return'Unlimited mistakes: you replay the stage every time.'+kp;
+const a=l?`A mistake lets you replay the stage, ${n(l)} in the whole run.`:'',b=r<0?`${l?'After that, every':'Every'} mistake restarts from the first word.`:r?`${l?'After that, a':'A'} mistake lets you restart from the first word, ${n(r)}${l?'':' in the whole run'}.`:'';
+return[a,b,r<0?'':l||r?'Then the next mistake ends the run.':'One mistake ends the run.'].filter(Boolean).join(' ')+kp};
+const DIF=[['vez','Very easy: unlimited'],['easy','Easy: 3 replays, 3 restarts'],['med','Medium: 2 replays, 2 restarts'],['hard','Hard: 1 replay, 1 restart'],['exp','Expert: no replays, 1 restart'],['cus','Custom: your own rules']];
+const TV={stage:[10,15,20,30,45,60,90],sess:[60,120,180,300,600,900,1200,1800]};
+/* Settings code: 15 characters (3 groups of 5) from a 32-character alphabet, 5 bits each = 75 bits.
+   Bits 1-60 hold the settings in a fixed order (a 3-bit format tag of 1, then CF below, then 3 spare bits that must be 0).
+   Bits 61-75 are a CRC-15 checksum of those 60 bits, so a typo or a changed order is rejected. The theme is never part of it. */
+const DL=[2000,1500,1000,750,500,300,200,100],SK=['order','diff','cunl','crep','clif','ckeep','timer','secs','wsec','sess','trs','swon','swf','auto','dly','snd','cheat'],
+DEFS=Object.assign(SK.reduce((o,k)=>(o[k]=DEF0[k],o),{}),{diff:'med',timer:'word',wsec:5,auto:'1',dly:500}),
+OPT={diff:DIF.map(x=>x[0]),order:['orig','shuf'],timer:['off','word','stage','sess'],cheat:['off','cp','rc','both'],cunl:['0','1'],ckeep:['0','1'],trs:['0','1'],swon:['0','1'],swf:['s','ms'],auto:['0','1']},
+CF=[['diff',3,'o'],['order',1,'o'],['cunl',1,'o'],['crep',10,'n',0,999],['clif',10,'n',0,999],['ckeep',1,'o'],['timer',2,'o'],['secs',3,'l',TV.stage],['wsec',10,'n',1,999],['sess',3,'l',TV.sess],['trs',1,'o'],['swon',1,'o'],['swf',1,'o'],['auto',1,'o'],['dly',3,'l',DL],['snd',1,'b'],['cheat',2,'o']],
+AL='0123456789ABCDEFGHJKMNPQRSTVWXYZ',
+crc=b=>{let c=0;for(const x of b){const m=(c>>14&1)^x;c=c<<1&32767;if(m)c^=17817}return c},
+toCode=c=>{const b=[],put=(v,n)=>{for(let i=n-1;i>=0;i--)b.push(v>>i&1)};put(1,3);
+CF.forEach(([k,n,t,a,z])=>{let v=c[k];
+if(t=='o')v=Math.max(0,OPT[k].indexOf(String(v)));
+else if(t=='n')v=Math.min(z,Math.max(a,parseInt(v)||a));
+else if(t=='l'){let j=0;a.forEach((x,i)=>{if(Math.abs(x-v)<Math.abs(a[j]-v))j=i});v=j}
+else v=v?1:0;put(v,n)});put(0,3);
+const q=crc(b),d=b.concat(Array.from({length:15},(_,i)=>q>>14-i&1));let s='';for(let i=0;i<75;i+=5)s+=AL[d.slice(i,i+5).reduce((x,y)=>x<<1|y,0)];return s.match(/.{5}/g).join('-')},
+fromCode=s=>{s=String(s).toUpperCase().replace(/[\s-]/g,'').replace(/O/g,'0').replace(/[IL]/g,'1');
+if(s.length!=15||[...s].some(ch=>AL.indexOf(ch)<0))return null;
+const d=[];for(const ch of s)for(let i=4;i>=0;i--)d.push(AL.indexOf(ch)>>i&1);
+const b=d.slice(0,60);if(crc(b)!=d.slice(60).reduce((x,y)=>x<<1|y,0))return null;
+let p=0;const get=n=>{let v=0;while(n--)v=v<<1|b[p++];return v},c={};
+if(get(3)!=1)return null;
+for(const[k,n,t,a,z]of CF){const v=get(n);
+if(t=='o'){if(v>=OPT[k].length)return null;c[k]=OPT[k][v]}
+else if(t=='n'){if(v<a||v>z)return null;c[k]=v}
+else if(t=='l'){if(v>=a.length)return null;c[k]=a[v]}
+else c[k]=!!v}
+return get(3)?null:c},
+h2r=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),r2h=a=>'#'+a.map(n=>n.toString(16).padStart(2,'0')).join(''),
+lum=h=>{const c=h2r(h).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*c[0]+.7152*c[1]+.0722*c[2]},
+ctr=(a,b)=>{const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+function paint(){const cu=cfg.theme=='custom',[bg,fg,ac]=cfg.c,dk=ctr(bg,'#4cc38a')+ctr(bg,'#f0807a')>ctr(bg,'#157347')+ctr(bg,'#c0392b'),
+v={'--bg':bg,'--fg':fg,'--ac':ac,'--on':ctr(ac,bg)>=ctr(ac,fg)?bg:fg,'--ok':dk?'#4cc38a':'#157347','--bad':dk?'#f0807a':'#c0392b'};
+Object.keys(v).forEach(k=>cu?R.style.setProperty(k,v[k]):R.style.removeProperty(k))}
+function beep(f,d=.12,t='sine'){if(!cfg.snd)return;try{AC=AC||new AudioContext();const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch{}}
+function confetti(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;for(let i=0;i<44;i++){const s=document.createElement('i');s.className='cf';s.style.cssText=`left:${Math.random()*100}vw;background:${['var(--ac)','var(--ok)','var(--fg)'][i%3]};animation-delay:${Math.random()*.7}s;--r:${Math.random()*720}deg`;document.body.append(s);setTimeout(()=>s.remove(),3600)}}
+function sure(b,f){if(b.dataset.s){clearTimeout(+b.dataset.s);b.innerHTML=b.dataset.o;delete b.dataset.s;f();return}b.dataset.o=b.innerHTML;b.innerHTML='Sure?';b.dataset.s=setTimeout(()=>{b.innerHTML=b.dataset.o;delete b.dataset.s},2500)}
+const SUM={timer:()=>{const t=cfg.timer;return t=='off'?'Untimed'+(cfg.swon=='1'?', stopwatch on':''):t=='word'?'Scaling per word, '+cfg.wsec+' s':t=='stage'?'Per stage, '+cfg.secs+' s':'Whole session, '+fmt(cfg.sess)},
+auto:()=>cfg.auto=='1'?'On, '+(cfg.dly==100?'instant':cfg.dly/1000+' s'):'Off',cheat:()=>(SEG.cheat.find(x=>x[0]==cfg.cheat)||[])[1]||'',snd:()=>cfg.snd?'On':'Off',theme:()=>(SEG.theme.find(x=>x[0]==cfg.theme)||[])[1]||''},
+sumUp=()=>Object.keys(SUM).forEach(k=>{$('#sm-'+k).textContent=SUM[k]()});
+function ui(){
+document.querySelectorAll('.seg').forEach(e=>{const k=e.dataset.k;e.innerHTML=SEG[k].map(([v,l])=>`<button data-k="${k}" data-v="${v}" class="${cfg[k]==v?'on':''}" aria-pressed="${cfg[k]==v}">${l}</button>`).join('')});
+$('#dif').innerHTML=DIF.map(([v,t])=>`<button class="dc ${cfg.diff==v?'on':''}" data-k="diff" data-v="${v}" aria-pressed="${cfg.diff==v}"><b>${t}</b><span>${rule(prm(v))}</span></button>`).join('');
+$('#cu').hidden=cfg.diff!='cus';{const un=cfg.cunl=='1';$('#crw').hidden=$('#clw').hidden=un;$('#ckw').hidden=!un&&!+cfg.crep}
+const t=cfg.timer,tv=$('#tv');tv.hidden=t=='off'||t=='word';$('#tww').hidden=t!='word';$('#trc').hidden=!(t=='stage'||t=='word')||!prm().l;$('#swc').hidden=t!='off';$('#swo').hidden=cfg.swon!='1';
+if(t=='stage'||t=='sess'){const key=t=='stage'?'secs':'sess';tv.innerHTML=TV[t].map(s=>`<option value="${s}" ${cfg[key]==s?'selected':''}>${t=='stage'?s+' seconds per stage':fmt(s)+' for the whole session'}</option>`).join('')}
+$('#dl').hidden=cfg.auto!='1';$('#dl').innerHTML=DL.map(v=>`<option value="${v}" ${cfg.dly==v?'selected':''}>Delay: ${v/1000} s${v==100?' (instant)':''}</option>`).join('');$('#cp').hidden=cfg.theme!='custom';R.dataset.theme=cfg.theme;paint();sumUp()}
+document.addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(b){const k=b.dataset.k,v=b.dataset.v;cfg[k]=v;save();ui();if(['swf','swon','timer'].includes(k))drawL();document.querySelector(`button[data-k="${k}"][data-v="${v}"]`)?.focus({preventScroll:true})}});
+$('#tv').onchange=e=>{cfg[cfg.timer=='stage'?'secs':'sess']=+e.target.value;save();sumUp()};
+/* Numbers-only boxes (marked data-num): other characters are refused and a short error shows under the box */
+const nerr=(el,m)=>{let e=el.nextElementSibling;if(!e||!e.classList.contains('ne')){e=document.createElement('div');e.className='bad ne';e.setAttribute('role','alert');el.after(e)}e.textContent=m;e.hidden=false;clearTimeout(e.t);e.t=setTimeout(()=>e.hidden=true,3500)},
+nclr=el=>{const e=el.nextElementSibling;if(e&&e.classList.contains('ne'))e.hidden=true},isN=t=>t.dataset&&'num' in t.dataset;
+document.addEventListener('beforeinput',e=>{const t=e.target;if(!isN(t)||!/^insert/.test(e.inputType)||e.data==null||!/\D/.test(e.data))return;e.preventDefault();nerr(t,'Numbers only.');
+if(/Paste|Drop/.test(e.inputType)){const room=t.maxLength<0?1e9:t.maxLength-(t.value.length-(t.selectionEnd-t.selectionStart)),d=e.data.replace(/\D+/g,'').slice(0,Math.max(0,room));if(d){t._pf=1;t.setRangeText(d,t.selectionStart,t.selectionEnd,'end');t.dispatchEvent(new Event('input',{bubbles:true}))}}},true);
+document.addEventListener('input',e=>{const t=e.target;if(!isN(t))return;const v=t.value,c=v.replace(/\D+/g,'');if(c!==v){const p=t.selectionStart==null?v.length:t.selectionStart,k=v.slice(0,p).replace(/\D+/g,'').length;t.value=c;try{t.setSelectionRange(k,k)}catch{}nerr(t,'Numbers only.')}else if(!t._pf)nclr(t);t._pf=0},true);
+$('#tw').value=cfg.wsec;$('#tw').oninput=e=>{const n=parseInt(e.target.value);if(n>=1&&n<=999){cfg.wsec=n;save();sumUp()}};$('#tw').onchange=e=>{const n=parseInt(e.target.value);if(!(n>=1&&n<=999))nerr(e.target,'Enter a number from 1 to 999.');e.target.value=cfg.wsec};
+$('#dl').onchange=e=>{cfg.dly=+e.target.value;save();sumUp()};
+[['#crp','crep'],['#clf','clif']].forEach(([id,k])=>{const e=$(id);e.value=cfg[k];e.oninput=()=>{cfg[k]=Math.min(999,Math.max(0,parseInt(e.value)||0));save();ui()};e.onchange=()=>{e.value=cfg[k]}});
+['c0','c1','c2'].forEach((id,i)=>{const e=$('#'+id);e.value=cfg.c[i];e.oninput=()=>{cfg.c[i]=e.value;save();ui()}});
+$('#cd').onclick=()=>{cfg.c=DC.slice();['c0','c1','c2'].forEach((id,i)=>$('#'+id).value=cfg.c[i]);save();ui()};
+$('#snd').checked=cfg.snd;$('#snd').onchange=e=>{cfg.snd=e.target.checked;save();sumUp()};
+const syncIn=()=>{$('#tw').value=cfg.wsec;$('#crp').value=cfg.crep;$('#clf').value=cfg.clif;$('#snd').checked=cfg.snd;['c0','c1','c2'].forEach((id,i)=>$('#'+id).value=cfg.c[i])},
+say=(id,h)=>{$(id).innerHTML=h},
+cpy=(t,id,ok,no)=>{say(id,no);try{navigator.clipboard.writeText(t).then(()=>say(id,ok),()=>{})}catch{}},
+ccode=()=>cfg.c.map(h=>h2r(h).join(',')).join(' ');
+$('#scs').onclick=()=>{const c=toCode(cfg),b=$('#sc');b.value=c;b.focus();b.select();cpy(c,'#scm','<span class="good">Settings saved as a code and copied. Paste it here later and press Load.</span>','Settings saved as a code. Copy it from the box to keep it.')};
+$('#scl').onclick=()=>{const t=$('#sc').value.trim();if(!t)return say('#scm','<span class="bad">Paste a settings code first.</span>');
+const c=fromCode(t);if(!c)return say('#scm',`<span class="bad">That code isn’t in the correct order. Paste all 15 letters and numbers exactly as they were saved, like ${toCode(DEFS)}.</span>`);
+Object.assign(cfg,c);save();syncIn();ui();drawL();$('#sc').value=toCode(cfg);say('#scm','<span class="good">Settings loaded.</span>')};
+$('#scd').onclick=e=>sure(e.currentTarget,()=>{Object.assign(cfg,DEFS);save();syncIn();ui();drawL();$('#sc').value=toCode(cfg);say('#dsm','<span class="good">Default settings loaded: medium, 5 seconds per word, auto-advance 0.5 s.</span>')});
+$('#tcs').onclick=()=>{const v=ccode(),b=$('#tc');b.value=v;b.focus();b.select();cpy(v,'#tcm','<span class="good">Colours saved as a code and copied. Paste it here later and press Load.</span>','Colours saved as a code. Copy it from the box to keep it.')};
+$('#tcl').onclick=()=>{const t=$('#tc').value.trim();if(!t)return say('#tcm','<span class="bad">Paste a colour code first.</span>');
+const m=/^(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s+(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s+(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})$/.exec(t);
+if(!m||m.slice(1).some(x=>+x>255))return say('#tcm','<span class="bad">Those colours aren’t in the correct order. Use background, text, then accent, each as red,green,blue from 0 to 255, like 244,243,235 0,0,0 0,87,56.</span>');
+const n=m.slice(1).map(Number);cfg.c=[0,3,6].map(i=>r2h(n.slice(i,i+3)));save();syncIn();ui();$('#tc').value=ccode();say('#tcm','<span class="good">Colours loaded.</span>')};
+const ta=$('#ta'),stI=$('#st'),enI=$('#en');ta.value=cfg.txt;stI.value=cfg.st;enI.value=cfg.en;fixR(1);cfg.st=stI.value;cfg.en=enI.value;
+function rng(){const w=parse(ta.value),n=w.length;let s=parseInt(stI.value)||1,e=parseInt(enI.value)||n;s=Math.min(Math.max(s,1),Math.max(n,1));e=Math.min(Math.max(e,s),n);return{w,n,s,e}}
+function fixR(c){const n=parse(ta.value).length;stI.max=enI.max=n||'';
+if(n){let s=parseInt(stI.value),e=parseInt(enI.value);
+if(s>n)stI.value=s=n;if(e>n)enI.value=e=n;
+if(c){if(!isNaN(s))stI.value=s=Math.max(s,1);if(!isNaN(e))enI.value=e=Math.max(e,s||1)}}
+enI.min=parseInt(stI.value)||1}
+function inf(){const{w,n,s,e}=rng(),d=n-new Set(w.map(x=>norm(x).join(' '))).size;
+$('#info').innerHTML=`${n} word${n==1?'':'s'} detected`+(n&&(s>1||e<n)?`, playing words ${s} to ${e}`:'')+(d?`, ${d} duplicate${d>1?'s':''}`:'')}
+[ta,stI,enI].forEach(x=>x.oninput=()=>{fixR();cfg.txt=ta.value;cfg.st=stI.value;cfg.en=enI.value;save();inf()});
+[stI,enI].forEach(x=>x.onchange=()=>{fixR(1);cfg.st=stI.value;cfg.en=enI.value;save();inf()});
+$('#rr').onclick=e=>sure(e.currentTarget,()=>{stI.value=enI.value='';cfg.st=cfg.en='';cfg.order='orig';nclr(stI);nclr(enI);save();fixR();inf();ui()});
+const fo=(a,k,v)=>[...document.querySelectorAll(`#sl [data-a=${a}]`)].find(x=>x.dataset.n==k&&(v===undefined||x.dataset.v==v))?.focus({preventScroll:true});
+function drawL(){$('#sl').innerHTML=Object.keys(lists).map(k=>`<div class="row" style="margin-top:6px"><button data-a="load" data-n="${esc(k)}" style="flex:1;text-align:left">${esc(k)} <span class="mu">(${parse(lists[k]).length} words)</span></button><button data-a="sc" data-n="${esc(k)}" class="${shown.has(k)?'on':''}" aria-expanded="${shown.has(k)}">Scores</button><button data-a="dup" data-n="${esc(k)}">Duplicate</button><button data-a="del" data-n="${esc(k)}">Delete</button></div>${shown.has(k)?scoreCard(k):''}`).join('')}
+$('#sv').onclick=e=>{if(!ta.value.trim())return;const n=$('#nm').value.trim()||'List '+(Object.keys(lists).length+1),ch=lists[n]&&sg(lists[n])!=sg(ta.value),go=()=>{if(ch){delete scores[n];S.s('cr-sc',scores)}lists[n]=ta.value;S.s('cr-lists',lists);$('#nm').value=n;drawL()};
+if(ch&&hasSc(n)){$('#info').innerHTML=`<span class="bad">Saving changes “${esc(n)}”, so its scores will be cleared. Press the button again to confirm.</span>`;setTimeout(inf,2600);sure(e.currentTarget,go)}else go()};
+$('#sl').onclick=e=>{const b=e.target.closest('button[data-a]');if(!b)return;const k=b.dataset.n,a=b.dataset.a,done=()=>{S.s('cr-lists',lists);drawL()};
+if(a=='load'){ta.value=lists[k];$('#nm').value=k;stI.value=enI.value='';ta.oninput()}
+else if(a=='dup'){let n=k+' copy';while(lists[n])n+=' copy';lists[n]=lists[k];done()}
+else if(a=='sc'){shown.has(k)?shown.delete(k):shown.add(k);drawL();fo('sc',k)}
+else if(a=='ca'){const z=ck(k,b.dataset.v);shownC.has(z)?shownC.delete(z):shownC.add(z);drawL();fo('ca',k,b.dataset.v)}
+else if(a=='rs')sure(b,()=>{delete scores[k];S.s('cr-sc',scores);drawL()})
+else if(a=='ds')sure(b,()=>{const o=scores[k]||{},v=b.dataset.v;o[v]=cr(o[v]);o[v].splice(+b.dataset.i,1);S.s('cr-sc',scores);drawL()})
+else sure(b,()=>{delete lists[k];delete scores[k];shown.delete(k);DIF.forEach(([v])=>shownC.delete(ck(k,v)));S.s('cr-sc',scores);done()})};
+function view(id){['setup','game','end'].forEach(x=>$('#'+x).hidden=x!=id);scrollTo(0,0)}
+function stats(){const a=tot.ok+tot.bad,d=tot.d;$('#ls').innerHTML=[['Runs started',tot.plays],['Runs completed',tot.wins],['Correct answers',tot.ok],['Mistakes',tot.bad],['Accuracy',a?Math.round(tot.ok/a*100)+'%':'–'],['Longest chain',tot.best],['Replays used',tot.lost],['Time played',hms(tot.time)],['Very easy completions',d.vez||0],['Easy completions',d.easy||0],['Medium completions',d.med||0],['Hard completions',d.hard||0],['Expert completions',d.exp||0],['Custom completions',d.cus||0]].map(([k,v])=>`<div class="card"><div class="mu">${k}</div><b style="font-size:1.3rem">${v}</b></div>`).join('')}
+function begin(){const{w,n,s,e}=rng();if(!n){$('#info').innerHTML='<span class="bad">Add at least one word to start.</span>';return}
+const a=w.slice(s-1,e);if(cfg.order=='shuf')for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+endRun(false);const q=prm(),RP=q.r<0?1/0:q.r,LP=q.l<0?1/0:q.l,L=LP==1/0?0:LP,sig=sg(ta.value),nm=$('#nm').value.trim(),sl=lists[nm]&&sg(lists[nm])==sig?nm:Object.keys(lists).find(k=>sg(lists[k])==sig)||'';
+G={a,i:0,ok:0,bad:0,lost:0,max:0,L,rp:LP,R:RP,rs:RP,keep:q.k,kp:0,ph:'ask',paused:false,t:0,sess:cfg.sess*1000,stg:(cfg.timer=='word'?cfg.wsec:cfg.secs)*1000,last:performance.now(),nx:'',msg:'',lt:-1,q,sl,dk:cfg.diff,full:s==1&&e==n,o:{a:cfg.auto,d:cfg.dly,r:cfg.order,s,e,tm:cfg.timer,tv:cfg.timer=='stage'?cfg.secs:cfg.timer=='word'?cfg.wsec:cfg.timer=='sess'?cfg.sess:0,tr:cfg.trs,ch:cfg.cheat}};
+tot.plays++;S.s('cr-tot',tot);$('#pz').hidden=true;view('game');render()}
+function render(){const{a,i,ph}=G,n=a.length,f=$('#fb'),g=$('#go'),inp=$('#ans');
+$('#stg').textContent=`Stage ${i+1} of ${n}`;$('#fill').style.width=(i+(ph=='ok'?1:0))/n*100+'%';
+$('#word').textContent=a[i];$('#pr').textContent=i?`Type all ${i+1} words in order.`:'Type the word.';
+$('#lv').innerHTML=[pp('♥','♡',G.L,G.rp),pp('↻','<span class="sp">↻</span>',G.R>0&&G.R<1/0?G.R:0,G.rs)].filter(Boolean).join('   ');
+inp.readOnly=ph!='ask';if(ph=='ask'){f.innerHTML='';if(!G.kp)inp.value=''}$('#show').hidden=ph!='ask';
+g.textContent=ph=='ask'?'Submit':ph=='ok'?(i+1>=n?'Finish':'Next'):G.nx=='over'?'See result':G.nx=='reset'?'Start over':'Try again';
+if(ph=='ok')f.innerHTML=TICK+'<span>Correct</span>';else if(ph=='wrong')f.innerHTML=G.msg;
+clock();(ph=='ask'?inp:g).focus();if(ph=='ask'&&G.kp){inp.setSelectionRange(1e4,1e4);G.kp=0}}
+let R0=new Int32Array(64),R1=new Int32Array(64);
+const lev=(x,y)=>{const n=x.length,m=y.length;if(m+1>R0.length){R0=new Int32Array(m+1);R1=new Int32Array(m+1)}let p=R0,c=R1;for(let j=0;j<=m;j++)p[j]=j;for(let i=1;i<=n;i++){c[0]=i;const xi=x[i-1];for(let j=1;j<=m;j++){const a=p[j]+1,b=c[j-1]+1,d=p[j-1]+(xi==y[j-1]?0:1);c[j]=a<b?(a<d?a:d):(b<d?b:d)}const t=p;p=c;c=t}return p[m]};
+function align(E,T){const n=E.length,m=T.length,W=m+1,cc=(A,i)=>[2,3,4].map(k=>A.slice(i,i+k).map(x=>x[0]).join('')),EM=E.map((_,i)=>cc(E,i)),TM=T.map((_,j)=>cc(T,j)),ea=E.map(e=>[...e[0]]),ta=T.map(t=>[...t[0]]),D=new Int32Array((n+1)*W),
+co=(i,j)=>E[i][0]==T[j][0]?0:Math.max(1,Math.round(20*lev(ea[i],ta[j])/Math.max(ea[i].length,ta[j].length))),
+nx=(i,j)=>{const o=[];if(i<n&&j<m){const c=co(i,j);o.push([c,i+1,j+1,c?'s':'m'])}
+for(let k=2;k<5;k++){if(i+k<=n&&j<m&&EM[i][k-2]==T[j][0])o.push([5,i+k,j+1,'g']);if(j+k<=m&&i<n&&TM[j][k-2]==E[i][0])o.push([5,i+1,j+k,'p'])}
+if(i<n)o.push([10,i+1,j,'d']);if(j<m)o.push([10,i,j+1,'x']);return o};
+for(let i=n;i>=0;i--)for(let j=m;j>=0;j--){if(i==n&&j==m)continue;let b=1e9;
+if(i<n&&j<m)b=co(i,j)+D[(i+1)*W+j+1];
+for(let k=2;k<5;k++){if(i+k<=n&&j<m&&EM[i][k-2]==T[j][0])b=Math.min(b,5+D[(i+k)*W+j+1]);if(j+k<=m&&i<n&&TM[j][k-2]==E[i][0])b=Math.min(b,5+D[(i+1)*W+j+k])}
+if(i<n)b=Math.min(b,10+D[(i+1)*W+j]);if(j<m)b=Math.min(b,10+D[i*W+j+1]);D[i*W+j]=b}
+const ops=[];let i=0,j=0;while(i<n||j<m){const c=nx(i,j).find(([w,a,b])=>w+D[a*W+b]==D[i*W+j]);ops.push([c[3],i,j,c[1],c[2]]);i=c[1];j=c[2]}return ops}
+function mark(r,F,P){const cs=[...r],U=tk(r),bo=new Set,gap={},B=s=>`<b class="bad">${s}</b>`;
+Object.keys(F).forEach(q=>{const u=U[q],x=F[q];if(!x)return u.forEach(z=>bo.add(z[1]));
+const a=u.map(z=>z[0]),b=[...x],n=a.length,m=b.length,L=Array.from({length:n+1},()=>Array(m+1).fill(0));
+for(let p=n-1;p>=0;p--)for(let s=m-1;s>=0;s--)L[p][s]=a[p]==b[s]?L[p+1][s+1]+1:Math.max(L[p+1][s],L[p][s+1]);
+let i=0,j=0;while(i<n||j<m){if(i<n&&j<m&&a[i]==b[j]){i++;j++}else if(j>=m||(i<n&&L[i+1][j]>=L[i][j+1]))bo.add(u[i++][1]);else{const k=i<n?u[i][1]:u[n-1][1]+1;gap[k]=(gap[k]||0)+1;j++}}});
+const g=k=>(P[k]||'')+(gap[k]?B('_'.repeat(gap[k])):'');
+return cs.map((c,k)=>g(k)+(bo.has(k)?B(esc(c)):esc(c))).join('')+g(cs.length)}
+function submit(){if(G.ph!='ask'||G.paused)return;
+const raw=$('#ans').value.trim(),rt=raw?raw.split(/\s+/):[],E=G.a.slice(0,G.i+1).flatMap((w,j)=>norm(w).map(t=>[t,j])),T=[];
+rt.forEach((r,j)=>tk(r).forEach((u,q)=>T.push([u.map(z=>z[0]).join(''),j,q,q?u[0][1]:0])));
+const n=E.length,m=T.length;if(!m)return;
+if(m==n&&T.every((t,k)=>t[0]==E[k][0])){G.ok++;tot.ok++;G.max=G.i+1;G.ph='ok';G.w=0;beep(660);setTimeout(()=>beep(880,.15),90);S.s('cr-tot',tot);return render()}
+const ops=m?align(E,T):[],F={},P={},pm={},xs=[],nI=G.i+1,bs=Array(nI).fill(0),ms=Array(nI).fill(0),tc=Array(nI).fill(0),fl=(k,x)=>{(F[T[k][1]]=F[T[k][1]]||{})[T[k][2]]=x};
+E.forEach(x=>tc[x[1]]++);
+ops.forEach(([k,i,j,i2,j2],o)=>{
+if(k=='s'){bs[E[i][1]]++;fl(j,E[i][0])}
+else if(k=='g'){for(let z=i;z<i2;z++)bs[E[z][1]]++;fl(j,'')}
+else if(k=='p'){bs[E[i][1]]++;for(let z=j;z<j2;z++)fl(z,'')}
+else if(k=='d'){ms[E[i][1]]++;if(j<m)(pm[j]=pm[j]||[]).push(i)}
+else if(k=='x'){fl(j,'');if(o&&ops[o-1][0]=='x')xs[xs.length-1].w.push(T[j][0]);else xs.push({i,w:[T[j][0]]})}});
+Object.keys(pm).forEach(k=>{(P[T[k][1]]=P[T[k][1]]||{})[T[k][3]]=pm[k].slice(0,3).map(i=>`<b class="bad">${'_'.repeat(Math.min(E[i][0].length,12))}</b>`).join(' ')+(pm[k].length>3?' <b class="bad">…</b>':'')+' '});
+let why='Nothing entered yet.',lone=0;
+if(m){const f=ops.findIndex(o=>o[0]!='m'),rs=ops.slice(f);lone=rs.every(o=>o[0]=='d')?1:rs.every(o=>o[0]=='x')?2:0;
+if(lone==1)why=`Right so far, but word ${E[ops[f][1]][1]+1} is missing or incomplete.`;
+else if(lone==2)why=`Too many words: nothing should come after word ${E[n-1][1]+1}.`;
+else{const IS=[];
+for(let t=0,u;t<nI;t=u+1){u=t;
+if(bs[t])IS.push([t*2+1,`Word ${t+1} doesn’t match. It’s spelled “${esc(G.a[t])}”.`]);
+else if(ms[t]&&ms[t]<tc[t])IS.push([t*2+1,`Word ${t+1} is incomplete. It’s spelled “${esc(G.a[t])}”.`]);
+else if(ms[t]){while(u+1<nI&&!bs[u+1]&&ms[u+1]==tc[u+1])u++;IS.push([t*2+1,u>t?`Words ${t+1} to ${u+1} are missing.`:`Word ${t+1} is missing. It’s spelled “${esc(G.a[t])}”.`])}}
+xs.forEach(c=>{const N=c.i?E[c.i-1][1]+1:0;IS.push([N*2,`Extra word${c.w.length>1?'s':''} “${esc(c.w.join(' '))}” ${N?'after word '+N:'before word 1'}.`])});
+IS.sort((a,b)=>a[0]-b[0]);
+why=IS.slice(0,5).map(x=>x[1]).join('<br>')+(IS.length>5?`<br>…and ${IS.length-5} more.`:'')}}
+const cnt=cfg.diff!='exp'&&m&&m!=n?`The number of words you typed (${m}) isn’t the same as the number needed (${n}).`:'';
+if(cnt)why=lone?cnt:why+'<br>'+cnt;
+const h=rt.map((r,j)=>F[j]||P[j]?mark(r,F[j]||{},P[j]||{}):esc(r)).join(' ');
+miss(`<div class="bad"><b>✕ Not quite.</b> ${why}</div>${rt.length?`<div class="att">${h}</div>`:''}`)}
+function miss(h){G.bad++;tot.bad++;if(G.rp>0){G.rp--;G.lost++;tot.lost++;G.nx='retry'}else if(G.rs>0){G.rs--;G.nx='reset'}else G.nx='over';
+G.ph='wrong';
+G.msg=h+(G.nx=='reset'?'<div class="bad" style="margin-top:6px">↺ Back to the first word. The run restarts.</div>':G.nx=='over'&&(G.L||G.R)?'<div class="bad" style="margin-top:6px">No '+[G.L&&'replays',G.R&&'restarts'].filter(Boolean).join(' or ')+' left.</div>':'');
+beep(200,.25,'square');S.s('cr-tot',tot);render()}
+function adv(){if(!G||G.paused)return;const p=G.ph;
+if(p=='ask')return submit();
+if(p=='ok'){if(G.i+1>=G.a.length)return fin(true,'Complete!');G.i++}
+else if(p=='wrong'){if(G.nx=='over')return fin(false,'Game over');if(G.nx=='reset')G.i=0;else G.kp=G.keep}
+else return;G.ph='ask';if(!(p=='wrong'&&G.nx=='retry'&&cfg.trs=='0'&&G.stg>0))G.stg=(cfg.timer=='word'?(G.i+1)*cfg.wsec:cfg.secs)*1000;render()}
+function fin(w,t){G.ph='done';G.paused=false;endRun(w);if(w){tot.wins++;tot.d[G.dk]=(tot.d[G.dk]||0)+1}S.s('cr-tot',tot);
+$('#et').textContent=t;
+$('#es').innerHTML=[['Words memorised',G.max+' of '+G.a.length],['Correct answers',G.ok],['Mistakes',G.bad],...(G.L?[['Replays used',G.lost]]:[]),['Time',hms(G.t,msf())]].map(([k,v])=>`<div class="card"><div class="mu">${k}</div><b style="font-size:1.3rem">${v}</b></div>`).join('');
+view('end');if(w){beep(523,.12);setTimeout(()=>beep(784,.2),130);confetti()}}
+function clock(){const e=$('#tm');if(!G){e.textContent='';return}
+if(cfg.timer=='off'){e.classList.remove('low','fl');e.textContent=cfg.swon=='1'?'⏱ '+hms(G.t,cfg.swf=='ms'):'';return}
+const se=cfg.timer=='sess',r=(se?G.sess:G.stg)/1000,low=r<=(se?10:5)&&(se||G.ph=='ask');
+e.textContent='⏱ '+fmt(r);e.classList.toggle('low',low);
+if(!low){G.lt=-1;e.classList.remove('fl')}
+else if(!G.paused&&G.ph!='done'){const c=Math.ceil(r);if(c!=G.lt){G.lt=c;beep(520,.05);e.classList.remove('fl');void e.offsetWidth;e.classList.add('fl')}}}
+function doPause(p=!G.paused){if(!G||G.ph=='done')return;G.paused=p;G.last=performance.now();$('#tm').style.animationPlayState=p?'paused':'running';$('#pz').hidden=!p;if(p)document.activeElement.blur();else(G.ph=='ask'?$('#ans'):$('#go')).focus()}
+setInterval(()=>{if(!G||G.ph=='done')return;const n=performance.now(),d=n-G.last;G.last=n;if(G.paused)return;G.t+=d;tot.time+=d;
+if(cfg.timer=='sess'){G.sess-=d;if(G.sess<=0){G.sess=0;G.bad++;tot.bad++;return fin(false,'Time’s up')}}
+else if((cfg.timer=='stage'||cfg.timer=='word')&&G.ph=='ask'){G.stg-=d;if(G.stg<=0){G.stg=0;return miss('<div class="bad"><b>⏱ Time’s up</b> for this stage.</div>')}}
+if(G.ph=='ok'&&cfg.auto=='1'){G.w=(G.w||0)+d;if(G.w>=cfg.dly)return adv()}clock()},50);
+document.addEventListener('keydown',e=>{if(!G||$('#game').hidden||e.repeat)return;if(e.key=='Escape')doPause();else if(e.key=='Enter'&&e.target.tagName!='BUTTON'){e.preventDefault();adv()}});
+$('#play').onclick=begin;$('#pa').onclick=begin;$('#go').onclick=adv;$('#pause').onclick=()=>doPause();$('#res').onclick=()=>doPause(false);
+$('#show').onclick=()=>{if(G.ph=='ask'&&!G.paused)miss(`<div class="bad"><b>Answer:</b> ${esc(G.a.slice(0,G.i+1).join(' '))}</div>`)};
+const home=()=>{endRun(false);S.s('cr-tot',tot);G=null;$('#pz').hidden=true;view('setup');stats();drawL()};
+$('#bs').onclick=home;
+$('#prs').onclick=e=>sure(e.target,begin);$('#pmn').onclick=e=>sure(e.target,home);
+$('#rt').onclick=e=>sure(e.currentTarget,()=>{tot=T0();scores=nul({});shownC.clear();S.s('cr-tot',tot);S.s('cr-sc',scores);stats();drawL()});
+$('#rs2').onclick=e=>sure(e.currentTarget,()=>{tot=T0();S.s('cr-tot',tot);stats()});
+/* Anti-cheat: only ever active during a run (the game screen is showing and the run isn't over). The setup screen is never touched. */
+let tt;const toast=m=>{const e=$('#toast');e.textContent=m;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>e.hidden=true,1800)},
+gm=()=>G&&G.ph!='done'&&!$('#game').hidden?G.o.ch:'off',noCP=()=>/^(cp|both)$/.test(gm()),noRC=()=>/^(rc|both)$/.test(gm()),
+blk=(e,m)=>{e.preventDefault();e.stopPropagation();toast(m)};
+['copy','cut','paste','drop','dragstart'].forEach(t=>document.addEventListener(t,e=>{if(noCP())blk(e,'Copy and paste are blocked in this run.')},true));
+document.addEventListener('beforeinput',e=>{if(noCP()&&/^(insertFromPaste|insertFromPasteAsQuotation|insertFromDrop|insertFromYank|deleteByCut|historyUndo|historyRedo)$/.test(e.inputType))blk(e,'Copy, paste, undo and redo are blocked in this run.')},true);
+document.addEventListener('keydown',e=>{if(!noCP())return;const k=String(e.key).toLowerCase(),m=e.ctrlKey||e.metaKey;
+if(m&&(/^[cxvzy]$/.test(k)||/^Key[CXVZY]$/.test(e.code))||e.ctrlKey&&e.key=='Insert'||e.shiftKey&&(e.key=='Insert'||e.key=='Delete'))blk(e,'Copy, paste, undo and redo are blocked in this run.')},true);
+document.addEventListener('contextmenu',e=>{if(noRC())blk(e,'Right-click is blocked in this run.')},true);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&G){doPause(true);S.s('cr-tot',tot)}});
+addEventListener('pagehide',e=>{if(G&&G.ph!='done'){if(e.persisted){tot.best=Math.max(tot.best,G.max);S.s('cr-tot',tot)}else endRun(false)}});
+addEventListener('storage',e=>{if(e.storageArea!=localStorage)return;if(e.key=='cr-lists'){lists=nul(S.g('cr-lists',{}));drawL()}else if(e.key=='cr-sc'){scores=nul(S.g('cr-sc',{}));migSc();drawL()}else if(e.key=='cr-tot'){tot=Object.assign(T0(),S.g('cr-tot',{}));stats()}});
+document.querySelectorAll('details.grp').forEach(d=>{d.open=!!cfg.op[d.id];d.ontoggle=()=>{cfg.op[d.id]=d.open;save()}});
+migSc();ui();inf();drawL();stats();
+</script></body></html>
